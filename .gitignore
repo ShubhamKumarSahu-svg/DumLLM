@@ -1,35 +1,55 @@
-# Virtual Environment
+
+# ==============================
+# Python Virtual Environments
+# ==============================
 .venv/
 venv/
 ENV/
+env/
 
-# Python caching
+# ==============================
+# Python Cache
+# ==============================
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Jupyter Notebook checkpoints
+# ==============================
+# Jupyter
+# ==============================
 .ipynb_checkpoints/
-*/.ipynb_checkpoints/
+**/.ipynb_checkpoints/
 
-# Google Drive hidden system files
+# ==============================
+# Google Drive System Files
+# ==============================
 .Trash*/
 .desktop
 
+# ==============================
+# Environment Variables / Secrets
+# ==============================
 .env
 .env.*
 !.env.example
 
-*.pth
+# ==============================
+# Documents and Archives
+# ==============================
+*.pdf
+*.zip
 
-/gpt2
-
-# Model weights and checkpoints
-/model.pth
-/gpt2/
+# ==============================
+# Model Weights and Checkpoints
+# ==============================
 *.pth
 *.ckpt
 *.safetensors
-
-/sms_spam_collection/
+/model.pth
+/gpt2/
 checkpoints/
+
+# ==============================
+# Dataset Directories
+# ==============================
+/sms_spam_collection/
