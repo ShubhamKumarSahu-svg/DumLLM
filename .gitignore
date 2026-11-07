@@ -53,3 +53,5 @@ checkpoints/
 # Dataset Directories
 # ==============================
 /sms_spam_collection/
+
+*.csv
