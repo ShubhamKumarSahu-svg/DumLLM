@@ -36,6 +36,7 @@ __pycache__/
 # ==============================
 # Documents and Archives
 # ==============================
+*.csv
 *.pdf
 *.zip
 
@@ -54,4 +55,3 @@ checkpoints/
 # ==============================
 /sms_spam_collection/
 
-*.csv
