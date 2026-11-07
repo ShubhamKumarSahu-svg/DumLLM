@@ -23,3 +23,10 @@ __pycache__/
 *.pth
 
 /gpt2
+
+# Model weights and checkpoints
+/model.pth
+/gpt2/
+*.pth
+*.ckpt
+*.safetensors
