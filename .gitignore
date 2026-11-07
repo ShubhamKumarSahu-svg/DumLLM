@@ -30,3 +30,6 @@ __pycache__/
 *.pth
 *.ckpt
 *.safetensors
+
+/sms_spam_collection/
+checkpoints/
