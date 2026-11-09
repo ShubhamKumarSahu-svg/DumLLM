@@ -4,11 +4,41 @@
 [![Hugging Face Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-orange)](https://huggingface.co/shubhamisok/dumllm-models)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-**DumLLM** is an end-to-end Large Language Model project demonstrating from-scratch training, fine-tuning, and cloud deployment of custom GPT-2 architectures built with PyTorch.
+> **🚀 Milestone Completed**: A full, professional implementation of the curriculum from Sebastian Raschka's seminal book *"Build a Large Language Model (From Scratch)"* — spanning text tokenization, multi-head attention mechanisms, GPT architecture implementation, pretraining on unlabeled corpora, and fine-tuning for both classification and instruction-following.
 
-The repository includes a modern, dual-tab **Gradio** web application that allows real-time interactive testing of two custom fine-tuned checkpoints:
-1. **🛡️ SMS Spam Classifier**: Fine-tuned on GPT-2 Small (124M) with a binary classification head, providing real-time probability confidence scores.
-2. **💬 Instruction Assistant**: Fine-tuned on GPT-2 Medium (355M) using Supervised Fine-Tuning (SFT) formatted with Alpaca-style instruction prompts.
+**DumLLM** takes these foundational principles from theoretical PyTorch code into a production-grade, dual-model interactive **Gradio** studio deployed for the web.
+
+---
+
+## 🏆 What I Built & Learned
+
+Implementing a generative Large Language Model from the ground up without relying on high-level abstraction wrappers provided deep, first-principles engineering insights:
+
+1. **Byte-Pair Encoding (BPE) & Data Pipelines**:
+   * Tokenized raw text into subwords using `tiktoken` (vocab size: 50,257).
+   * Developed custom PyTorch `Dataset` and `DataLoader` pipelines with causal sliding-window context sampling (`ch02`).
+
+2. **Self-Attention & Multi-Head Attention from Scratch**:
+   * Built causal masks, attention score matrices, scaled dot-product routines, and multi-head projection layers purely using matrix operations (`ch03`).
+
+3. **Complete GPT-2 Architecture Implementation**:
+   * Implemented custom Layer Normalization, GELU activations, residual shortcut connections, and feed-forward networks matching OpenAI's GPT-2 Small (124M) and Medium (355M) configurations (`ch04`).
+
+4. **Pretraining & Autoregressive Decoding**:
+   * Programmed causal cross-entropy loss computation, temperature-scaled sampling, top-k filtering, and autoregressive generation loops (`ch05`).
+
+5. **Fine-Tuning for Classification**:
+   * Adapted pretrained transformer backbones with linear projection classification heads.
+   * Fine-tuned GPT-2 Small on the SMS Spam dataset, replacing language modeling heads with binary classification targets (`ch06`).
+
+6. **Instruction Tuning (Supervised Fine-Tuning - SFT)**:
+   * Structured multi-turn Alpaca-style prompt templates (`### Instruction:`, `### Input:`, `### Response:`).
+   * Masked instruction targets during loss calculation and fine-tuned GPT-2 Medium (355M) to follow open-ended human requests (`ch07`).
+
+7. **Production ML Engineering & Cloud Deployment**:
+   * Decoupled model weights (~2.3 GB total) using the Hugging Face Hub API for instant caching.
+   * Built a clean, low-code interactive dual-tab Gradio UI.
+   * Implemented dynamic hardware routing compatible with Hugging Face ZeroGPU, standard cloud CPU, and local environments.
 
 ---
 
@@ -38,7 +68,7 @@ DumLLM/
 ├── app.py                  # Gradio multi-tab web application (ZeroGPU & local compatible)
 ├── gpt_model.py            # Clean, self-contained GPT-2 PyTorch model implementation
 ├── requirements.txt        # Production runtime dependencies
-├── README.md               # Project documentation
+├── README.md               # Project documentation & engineering writeup
 ├── notebooks/              # Complete from-scratch training & fine-tuning curriculum
 │   ├── ch02_Working_With_Text_Data.ipynb
 │   ├── ch03_Coding_Attention_Mechanisms.ipynb
@@ -71,7 +101,7 @@ DumLLM/
    python app.py
    ```
    * The models will automatically download from Hugging Face Hub on first startup and be cached locally.
-   * Open `http://localhost:7860` in your browser.
+   * Access the interface in your browser at: `http://localhost:7860`.
    * A public Gradio link (`https://xxxx.gradio.live`) will also be displayed in your console.
 
 ---
@@ -114,6 +144,12 @@ In a new notebook with GPU accelerator enabled (e.g. Kaggle T4 or Colab T4):
   * **Context / Input:** `Send me the reports right now, I need them before 5 PM.`
 * **Creative Writing:**
   * **Instruction:** `Write a four-line rhyming poem about deep space and distant galaxies.`
+
+---
+
+## 📜 Acknowledgments & References
+* **Sebastian Raschka**: Author of *"Build a Large Language Model (From Scratch)"* (Manning Publications).
+* OpenAI GPT-2 architecture and weights.
 
 ---
 
