@@ -1,23 +1,33 @@
-import sys
+import os
 import torch
 import tiktoken
 import gradio as gr
 from huggingface_hub import hf_hub_download
 
+# Detect if running in Hugging Face ZeroGPU environment
+IS_SPACES = "SPACES_ZERO_GPU" in os.environ or "SPACE_ID" in os.environ
+
+if IS_SPACES:
+    try:
+        import spaces
+        gpu_decorator = spaces.GPU
+    except ImportError:
+        def gpu_decorator(fn):
+            return fn
+else:
+    def gpu_decorator(fn):
+        return fn
+
 from gpt_model import GPTModel, generate, text_to_token_ids, token_ids_to_text
 
-# select device
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 tokenizer = tiktoken.encoding_for_model("gpt2")
-
 HF_REPO_ID = "shubhamisok/dumllm-models"
 
 print("Downloading model files from Hugging Face Hub...")
-
 spam_weights_path = hf_hub_download(repo_id=HF_REPO_ID, filename="spam_classifier.pth")
 instruct_weights_path = hf_hub_download(repo_id=HF_REPO_ID, filename="gpt2-medium355M-sft.pth")
 
-# load sms classifier
+# 1. Load SMS Spam Classifier (Kept on CPU initially so ZeroGPU doesn't crash at startup)
 SPAM_CONFIG = {
     "vocab_size": 50257,
     "context_length": 1024,
@@ -28,13 +38,11 @@ SPAM_CONFIG = {
     "n_heads": 12,
 }
 spam_model = GPTModel(SPAM_CONFIG)
-
 spam_model.out_head = torch.nn.Linear(SPAM_CONFIG["emb_dim"], 2)
-spam_model.load_state_dict(torch.load(spam_weights_path, map_location=device))
-spam_model.to(device)
+spam_model.load_state_dict(torch.load(spam_weights_path, map_location="cpu"))
 spam_model.eval()
 
-# load instruction model
+# 2. Load Instruction Model (Kept on CPU initially)
 INSTRUCT_CONFIG = {
     "vocab_size": 50257,
     "context_length": 1024,
@@ -45,22 +53,26 @@ INSTRUCT_CONFIG = {
     "n_heads": 16,
 }
 instruct_model = GPTModel(INSTRUCT_CONFIG)
-instruct_model.load_state_dict(torch.load(instruct_weights_path, map_location=device))
-instruct_model.to(device)
+instruct_model.load_state_dict(torch.load(instruct_weights_path, map_location="cpu"))
 instruct_model.eval()
 
 print("Model files downloaded and loaded successfully.")
 
 
+# 3. Inference Functions with dynamic device placement
+@gpu_decorator
 def classify_sms(sms_text, max_length=120):
     if not sms_text.strip():
         return {"Not Spam (Ham)": 0.0, "Spam": 0.0}
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    spam_model.to(device)
 
     token_ids = tokenizer.encode(sms_text)
     token_ids = token_ids[:min(max_length, 1024)]
     token_ids += [50256] * (max_length - len(token_ids))
 
-    input_tensor = torch.tensor(token_ids, device=device).unsqueeze(0)  
+    input_tensor = torch.tensor(token_ids, device=device).unsqueeze(0)
 
     with torch.inference_mode():
         logits = spam_model(input_tensor)[:, -1, :]
@@ -68,14 +80,18 @@ def classify_sms(sms_text, max_length=120):
 
     return {"Not Spam (Ham)": float(probs[0]), "Spam": float(probs[1])}
 
+
+@gpu_decorator
 def answer_instruction(instruction_text, optional_context="", max_token=120, temperature=0.7):
     if not instruction_text.strip():
         return "Please provide an instruction."
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    instruct_model.to(device)
+
     prompt = (
         f"Below is an instruction that describes a task.\nWrite a response that appropriately completes the request.\n\n### Instruction:\n{instruction_text}"
     )
-
     if optional_context.strip():
         prompt += f"\n\n### Input:\n{optional_context}"
     prompt += "\n\n### Response:\n"
@@ -97,30 +113,19 @@ def answer_instruction(instruction_text, optional_context="", max_token=120, tem
         return full_output.split("### Response:")[-1].strip()
     return full_output[len(prompt):].strip()
 
-# Gradio Interface
 
+# 4. Gradio UI
 with gr.Blocks(title="DumLLM Models Studio") as demo:
-    gr.Markdown(
-        "# DumLLM Dual Models Studio"
-    )
+    gr.Markdown("# DumLLM Dual Models Studio")
 
     with gr.Tabs():
-
-        # SMS Spam Classifier Tab
+        # Tab 1: SMS Spam Classifier
         with gr.Tab("SMS Spam Classifier"):
-            gr.Markdown(
-                "### Detect spam messages using a fine-tuned GPT-2 model."
-            )
-
+            gr.Markdown("### Detect spam messages using a fine-tuned GPT-2 model.")
             with gr.Row():
                 with gr.Column():
-                    sms_input = gr.Textbox(
-                        label="Enter SMS Text",
-                        placeholder="Type your SMS message here...",
-                        lines=4,
-                    )
-                    classify_button = gr.Button("Classify SMS")
-
+                    sms_input = gr.Textbox(label="Enter SMS Text", placeholder="Type your SMS message here...", lines=4)
+                    classify_button = gr.Button("Classify SMS", variant="primary")
                 with gr.Column():
                     sms_output = gr.Label(label="Spam Classification Result")
 
@@ -135,47 +140,32 @@ with gr.Blocks(title="DumLLM Models Studio") as demo:
             )
             classify_button.click(classify_sms, inputs=sms_input, outputs=sms_output)
 
-        # Instruction Answering Tab
+        # Tab 2: Instruction Answering
         with gr.Tab("Instruction Answering"):
-            gr.Markdown(
-                "### Ask questions to the model and get responses using a fine-tuned GPT-2 Medium model."
-            )
-
+            gr.Markdown("### Ask questions to the model and get responses using a fine-tuned GPT-2 Medium model.")
             with gr.Row():
                 with gr.Column():
                     instruction_box = gr.Textbox(label="Enter Question", placeholder="Type your question here...", lines=3)
                     context_box = gr.Textbox(label="Optional Context", placeholder="Provide additional context (optional)...", lines=2)
 
                     with gr.Accordion("Parameters", open=False):
-                        max_token_slider = gr.Slider(
-                            label="Max Tokens",
-                            minimum=20,
-                            maximum=256,
-                            value=256,
-                            step=10
-                        )
-                        temperature_slider = gr.Slider(
-                            label="Temperature",
-                            minimum=0.0,
-                            maximum=1.5,
-                            value=0.7,
-                            step=0.05
-                        )
+                        max_token_slider = gr.Slider(label="Max Tokens", minimum=20, maximum=256, value=120, step=10)
+                        temperature_slider = gr.Slider(label="Temperature", minimum=0.0, maximum=1.5, value=0.7, step=0.05)
 
                     generate_button = gr.Button("Generate Answer", variant="primary")
 
                 with gr.Column():
                     response_box = gr.Textbox(label="Model Response", lines=9)
 
-                    gr.Examples(
-                        examples=[
-                            ["What is the capital of France?", ""],
-                            ["Explain the theory of relativity in simple terms.", ""],
-                            ["Write a short poem about the ocean.", ""],
-                            ["Rewrite this in a polite tone.", "Send me the report now."],
-                        ],
-                        inputs=[instruction_box, context_box]
-                    )
+            gr.Examples(
+                examples=[
+                    ["What is the capital of France?", ""],
+                    ["Explain the theory of relativity in simple terms.", ""],
+                    ["Write a short poem about the ocean.", ""],
+                    ["Rewrite this in a polite tone.", "Send me the report now."],
+                ],
+                inputs=[instruction_box, context_box]
+            )
 
             generate_button.click(
                 answer_instruction,
@@ -184,4 +174,5 @@ with gr.Blocks(title="DumLLM Models Studio") as demo:
             )
 
 if __name__ == "__main__":
-    demo.launch(theme=gr.themes.Soft(), share=True)
+    # If running locally or elsewhere, share=True works; on Hugging Face Spaces it launches natively
+    demo.launch(share=not IS_SPACES)
