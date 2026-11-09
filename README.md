@@ -1,91 +1,121 @@
 # 🧠 DumLLM: Dual-Model Studio
 
-DumLLM is a project demonstrating end-to-end training, fine-tuning, and deployment of custom GPT-2 architectures built from scratch in PyTorch. 
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/shubhamisok/dumllm-studio)
+[![Hugging Face Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-orange)](https://huggingface.co/shubhamisok/dumllm-models)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-The studio features an interactive dual-window Gradio web UI that allows testing two distinct fine-tuned checkpoints:
-1. **🛡️ SMS Spam Classifier**: Fine-tuned on GPT-2 Small (124M) with a binary classification head for detecting spam vs. ham messages with real-time confidence scores.
-2. **💬 Instruction Assistant**: Fine-tuned on GPT-2 Medium (355M) using instruction-following supervised fine-tuning (SFT) formatted with Alpaca-style task prompts.
+**DumLLM** is an end-to-end Large Language Model project demonstrating from-scratch training, fine-tuning, and cloud deployment of custom GPT-2 architectures built with PyTorch.
+
+The repository includes a modern, dual-tab **Gradio** web application that allows real-time interactive testing of two custom fine-tuned checkpoints:
+1. **🛡️ SMS Spam Classifier**: Fine-tuned on GPT-2 Small (124M) with a binary classification head, providing real-time probability confidence scores.
+2. **💬 Instruction Assistant**: Fine-tuned on GPT-2 Medium (355M) using Supervised Fine-Tuning (SFT) formatted with Alpaca-style instruction prompts.
 
 ---
 
-## 🔗 Quick Links
+## 🔗 Quick Links & Live Demos
 
-* **🤗 Hugging Face Models Repository**: [shubhamisok/dumllm-models](https://huggingface.co/shubhamisok/dumllm-models)
-* **🚀 Hugging Face Space (Live Demo / Future Deployment)**: [shubhamisok/dumllm-studio](https://huggingface.co/spaces/shubhamisok/dumllm-studio)
+* **🚀 Live Demo on Hugging Face Spaces**: [shubhamisok/dumllm-studio](https://huggingface.co/spaces/shubhamisok/dumllm-studio)
+* **🤗 Hosted Model Checkpoints**: [shubhamisok/dumllm-models](https://huggingface.co/shubhamisok/dumllm-models)
 * **💻 GitHub Repository**: [ShubhamKumarSahu-svg/DumLLM](https://github.com/ShubhamKumarSahu-svg/DumLLM)
 
 ---
 
-## 📦 Model Checkpoints
+## 📦 Model Checkpoints & Specifications
 
-Both models are hosted on the Hugging Face Hub under [`shubhamisok/dumllm-models`](https://huggingface.co/shubhamisok/dumllm-models) and are downloaded automatically on first launch via `huggingface_hub`:
+The fine-tuned weights are hosted on the Hugging Face Hub under [`shubhamisok/dumllm-models`](https://huggingface.co/shubhamisok/dumllm-models) and automatically downloaded on first launch:
 
-| Model Name | Base Architecture | Parameters | Checkpoint File | Task |
-| :--- | :--- | :--- | :--- | :--- |
-| **SMS Spam Classifier** | GPT-2 Small | 124M | `spam_classifier.pth` (~548 MB) | Binary Classification (Ham / Spam) |
-| **Instruction Assistant** | GPT-2 Medium | 355M | `gpt2-medium355M-sft.pth` (~1.72 GB) | Text Generation & Instruction Following |
+| Model Name | Base Architecture | Parameters | Embedding Dim | Layers / Heads | Checkpoint File | Task |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **SMS Spam Classifier** | GPT-2 Small | 124M | 768 | 12 / 12 | `spam_classifier.pth` (~548 MB) | Binary Classification (Ham vs. Spam) |
+| **Instruction Assistant** | GPT-2 Medium | 355M | 1024 | 24 / 16 | `gpt2-medium355M-sft.pth` (~1.72 GB) | Text Generation & Instruction Following |
 
 ---
 
-## 🛠️ Architecture & Project Structure
+## 🛠️ Project Structure
 
 ```text
 DumLLM/
-├── app.py                  # Gradio multi-tab web application
-├── gpt_model.py            # Self-contained GPT-2 model definition & text generator
-├── requirements.txt        # Minimal runtime dependencies
-├── notebooks/              # Jupyter notebooks detailing the from-scratch training
+├── app.py                  # Gradio multi-tab web application (ZeroGPU & local compatible)
+├── gpt_model.py            # Clean, self-contained GPT-2 PyTorch model implementation
+├── requirements.txt        # Production runtime dependencies
+├── README.md               # Project documentation
+├── notebooks/              # Complete from-scratch training & fine-tuning curriculum
 │   ├── ch02_Working_With_Text_Data.ipynb
 │   ├── ch03_Coding_Attention_Mechanisms.ipynb
 │   ├── ch04_Implementing_a_GPT_Model.ipynb
 │   ├── ch05_Pretraining_On_Unlabeled_Data.ipynb
 │   ├── ch06_Fine_Tuning_for_Classification.ipynb
 │   └── ch07_Fine_Tuning_To_Follow_Instructions.ipynb
-└── README.md
+└── public/                 # Instruction datasets and resources
 ```
 
 ---
 
-## 🚀 Running Locally
+## 🚀 Getting Started
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/ShubhamKumarSahu-svg/DumLLM.git
-cd DumLLM
-```
+### Option 1: Run Locally
 
-### 2. Install dependencies
-```bash
-pip install -r requirements.txt
-```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/ShubhamKumarSahu-svg/DumLLM.git
+   cd DumLLM
+   ```
 
-### 3. Launch the studio
-```bash
-python app.py
-```
+2. **Install requirements:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-* The app will download model weights directly from Hugging Face on the first run (and cache them locally for subsequent runs).
-* Access the interface in your browser at: `http://localhost:7860`.
-* A free public Gradio share link (`https://xxxx.gradio.live`) will also be generated in the terminal.
+3. **Launch the studio:**
+   ```bash
+   python app.py
+   ```
+   * The models will automatically download from Hugging Face Hub on first startup and be cached locally.
+   * Open `http://localhost:7860` in your browser.
+   * A public Gradio link (`https://xxxx.gradio.live`) will also be displayed in your console.
 
 ---
 
-## 🌐 Running on Cloud Platforms (Free GPU)
+### Option 2: Run in Google Colab / Kaggle (Free GPU)
 
-### Run in Google Colab / Kaggle
+In a new notebook with GPU accelerator enabled (e.g. Kaggle T4 or Colab T4):
+
 ```python
-# Clone the repository
+# 1. Clone repository
 !git clone https://github.com/ShubhamKumarSahu-svg/DumLLM.git
 %cd DumLLM
 
-# Install minimal requirements
+# 2. Install dependencies
 !pip install -r requirements.txt
 
-# Run the app
+# 3. Start the application
 !python app.py
 ```
 
 ---
 
+## 🧪 Sample Prompts for Testing
+
+### 🛡️ Tab 1: SMS Spam Classifier
+* **Spam Sample:**
+  ```text
+  URGENT! You have won a £2000 cash prize or a holiday to Hawaii. Call 09061701461 to claim your reward immediately!
+  ```
+* **Legitimate (Ham) Sample:**
+  ```text
+  Hey, are we still meeting for dinner tonight around 7 PM? Let me know when you leave home.
+  ```
+
+### 💬 Tab 2: Instruction Assistant
+* **Fact / Reasoning:**
+  * **Instruction:** `What is photosynthesis and why is it essential for life on Earth?`
+* **Style Transfer:**
+  * **Instruction:** `Rewrite the following message into a polite, professional corporate email.`
+  * **Context / Input:** `Send me the reports right now, I need them before 5 PM.`
+* **Creative Writing:**
+  * **Instruction:** `Write a four-line rhyming poem about deep space and distant galaxies.`
+
+---
+
 ## 📜 License
-This project is licensed under the MIT License.
+This project is licensed under the [MIT License](LICENSE).
