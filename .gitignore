@@ -1,7 +1,10 @@
 
 # ==============================
-# Python Virtual Environments
+# Gradio & VSCode
 # ==============================
+.gradio/
+.vscode/
+
 .venv/
 venv/
 ENV/
